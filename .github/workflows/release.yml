@@ -13,15 +13,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # macOS (Apple Silicon)
           - platform: 'macos-latest'
             args: '--target aarch64-apple-darwin'
             target: aarch64-apple-darwin
-          # Ubuntu
           - platform: 'ubuntu-22.04'
             args: ''
             target: ''
-          # Windows
           - platform: 'windows-latest'
             args: ''
             target: ''
@@ -60,26 +57,41 @@ jobs:
         with:
           args: ${{ matrix.args }}
 
-      - name: Upload macOS binaries
-        if: matrix.platform == 'macos-latest'
-        uses: actions/upload-artifact@v4
-        with:
-          name: macos
-          path: src-tauri/target/aarch64-apple-darwin/release/bundle/
-
-      - name: Upload Linux binaries
+      - name: Find and upload installers (Linux)
         if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          find src-tauri/target/release/bundle -name "*.deb" -o -name "*.AppImage" -o -name "*.rpm"
+        shell: bash
         uses: actions/upload-artifact@v4
         with:
-          name: linux
-          path: src-tauri/target/release/bundle/
+          name: linux-installers
+          path: |
+            src-tauri/target/release/bundle/deb/*.deb
+            src-tauri/target/release/bundle/appimage/*.AppImage
+            src-tauri/target/release/bundle/rpm/*.rpm
 
-      - name: Upload Windows binaries
-        if: matrix.platform == 'windows-latest'
+      - name: Find and upload installers (macOS)
+        if: matrix.platform == 'macos-latest'
+        run: |
+          find src-tauri/target -name "*.dmg" -o -name "*.app"
+        shell: bash
         uses: actions/upload-artifact@v4
         with:
-          name: windows
-          path: src-tauri/target/release/bundle/
+          name: macos-installers
+          path: |
+            src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg
+
+      - name: Find and upload installers (Windows)
+        if: matrix.platform == 'windows-latest'
+        run: |
+          find src-tauri/target -name "*.exe" -o -name "*.msi"
+        shell: bash
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-installers
+          path: |
+            src-tauri/target/release/bundle/msi/*.msi
+            src-tauri/target/release/bundle/nsis/*.exe
 
   create-release:
     needs: release
@@ -91,11 +103,22 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: artifacts
+          pattern: '*-installers'
+          merge-multiple: true
+
+      - name: List artifacts
+        run: ls -la artifacts/
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          files: artifacts/**/*
+          files: |
+            artifacts/*.deb
+            artifacts/*.AppImage
+            artifacts/*.rpm
+            artifacts/*.dmg
+            artifacts/*.msi
+            artifacts/*.exe
           draft: false
           prerelease: false
         env:
