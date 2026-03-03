@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Cloud, Sun, CloudRain, Wind, Search, MapPin } from 'lucide-react';
+import { Cloud, Sun, CloudRain, Wind, Search, MapPin, AlertCircle } from 'lucide-react';
 
 interface WeatherData {
   temp: number;
@@ -30,7 +30,16 @@ function App() {
       const location = await getCoordinates(city);
       const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}¤t_weather=true`;
       const res = await fetch(weatherUrl);
+      
+      if (!res.ok) {
+        throw new Error(`Network error: ${res.status}`);
+      }
+      
       const data = await res.json();
+      
+      if (!data.current_weather) {
+        throw new Error('No weather data received');
+      }
       
       setWeather({
         temp: data.current_weather.temperature,
@@ -39,7 +48,8 @@ function App() {
         city: location.name
       });
     } catch (err) {
-      setError('Failed to fetch weather data.');
+      const message = err instanceof Error ? err.message : 'Failed to fetch weather data';
+      setError(`🌐 ${message}. Check your internet connection.`);
     } finally {
       setLoading(false);
     }
@@ -89,8 +99,9 @@ function App() {
           </div>
 
           {error && (
-            <div className="bg-red-100 text-red-600 p-4 rounded-xl mb-4 text-center">
-              {error}
+            <div className="bg-red-100 text-red-600 p-4 rounded-xl mb-4 text-center flex items-center justify-center gap-2">
+              <AlertCircle className="w-5 h-5" />
+              <span>{error}</span>
             </div>
           )}
 
