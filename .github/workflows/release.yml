@@ -16,37 +16,20 @@ jobs:
         include:
           - platform: 'macos-latest'
             args: '--target aarch64-apple-darwin'
-            target: aarch64-apple-darwin
           - platform: 'ubuntu-22.04'
             args: ''
-            target: ''
           - platform: 'windows-latest'
             args: ''
-            target: ''
-          - platform: 'ubuntu-22.04'
-            args: '--target aarch64-linux-android'
-            target: aarch64-linux-android
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Install dependencies (Ubuntu)
-        if: matrix.platform == 'ubuntu-22.04' && matrix.target != 'aarch64-linux-android'
+        if: matrix.platform == 'ubuntu-22.04'
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libxdo-dev
-
-      - name: Setup Java
-        if: matrix.target == 'aarch64-linux-android'
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-
-      - name: Setup Android SDK
-        if: matrix.target == 'aarch64-linux-android'
-        uses: android-actions/setup-android@v2
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -55,10 +38,6 @@ jobs:
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
-
-      - name: Add Android target
-        if: matrix.target == 'aarch64-linux-android'
-        run: rustup target add aarch64-linux-android
 
       - name: Rust cache
         uses: swatinem/rust-cache@v2
@@ -75,51 +54,15 @@ jobs:
         with:
           args: ${{ matrix.args }}
 
-      - name: Upload Linux installers
-        if: matrix.platform == 'ubuntu-22.04' && matrix.target == ''
-        uses: actions/upload-artifact@v4
-        with:
-          name: linux-installers
-          path: src-tauri/target/release/bundle/
-
-      - name: Upload macOS installers
-        if: matrix.platform == 'macos-latest'
-        uses: actions/upload-artifact@v4
-        with:
-          name: macos-installers
-          path: src-tauri/target/aarch64-apple-darwin/release/bundle/
-
-      - name: Upload Windows installers
-        if: matrix.platform == 'windows-latest'
-        uses: actions/upload-artifact@v4
-        with:
-          name: windows-installers
-          path: src-tauri/target/release/bundle/
-
-      - name: Upload Android APK/AAB
-        if: matrix.target == 'aarch64-linux-android'
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-installers
-          path: src-tauri/target/aarch64-linux-android/release/bundle/android/
-
   create-release:
     needs: release
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts
-          pattern: '*-installers'
-          merge-multiple: true
-
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          files: artifacts/**/*
           draft: false
           prerelease: false
         env:
