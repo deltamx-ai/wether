@@ -16,13 +16,10 @@ jobs:
         include:
           - platform: 'macos-latest'
             args: '--target aarch64-apple-darwin'
-            target: aarch64-apple-darwin
           - platform: 'ubuntu-22.04'
             args: ''
-            target: ''
           - platform: 'windows-latest'
             args: ''
-            target: ''
 
     steps:
       - name: Checkout repository
@@ -57,6 +54,12 @@ jobs:
         with:
           args: ${{ matrix.args }}
 
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.platform }}-bundle
+          path: src-tauri/target/release/bundle/
+
   create-release:
     needs: release
     runs-on: ubuntu-latest
@@ -67,9 +70,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: artifacts
-
-      - name: List artifacts
-        run: ls -laR artifacts/
+          merge-multiple: true
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
