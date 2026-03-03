@@ -16,10 +16,13 @@ jobs:
         include:
           - platform: 'macos-latest'
             args: '--target aarch64-apple-darwin'
+            artifact_path: src-tauri/target/aarch64-apple-darwin/release/bundle/
           - platform: 'ubuntu-22.04'
             args: ''
+            artifact_path: src-tauri/target/release/bundle/
           - platform: 'windows-latest'
             args: ''
+            artifact_path: src-tauri/target/release/bundle/
 
     steps:
       - name: Checkout repository
@@ -58,7 +61,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.platform }}-bundle
-          path: src-tauri/target/release/bundle/
+          path: ${{ matrix.artifact_path }}
 
   create-release:
     needs: release
