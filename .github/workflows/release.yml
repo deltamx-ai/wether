@@ -13,26 +13,18 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # macOS (Apple Silicon)
           - platform: 'macos-latest'
             args: '--target aarch64-apple-darwin'
             target: aarch64-apple-darwin
-          - platform: 'macos-latest'
-            args: '--target x86_64-apple-darwin'
-            target: x86_64-apple-darwin
+          # Ubuntu
           - platform: 'ubuntu-22.04'
             args: ''
             target: ''
+          # Windows
           - platform: 'windows-latest'
             args: ''
             target: ''
-          # iOS and Android builds typically require macOS runner and specific toolchains
-          # Uncomment when you have macOS runners and proper certificates/profiles configured
-          # - platform: 'macos-latest'
-          #   args: '--target aarch64-apple-ios'
-          #   target: aarch64-apple-ios
-          # - platform: 'macos-latest'
-          #   args: '--target aarch64-apple-ios-simulator'
-          #   target: aarch64-apple-ios-simulator
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -68,18 +60,11 @@ jobs:
         with:
           args: ${{ matrix.args }}
 
-      - name: Upload macOS binaries (x86_64)
-        if: matrix.platform == 'macos-latest' && matrix.target == 'x86_64-apple-darwin'
+      - name: Upload macOS binaries
+        if: matrix.platform == 'macos-latest'
         uses: actions/upload-artifact@v4
         with:
-          name: macos-x64
-          path: src-tauri/target/x86_64-apple-darwin/release/bundle/
-
-      - name: Upload macOS binaries (arm64)
-        if: matrix.platform == 'macos-latest' && matrix.target == 'aarch64-apple-darwin'
-        uses: actions/upload-artifact@v4
-        with:
-          name: macos-arm64
+          name: macos
           path: src-tauri/target/aarch64-apple-darwin/release/bundle/
 
       - name: Upload Linux binaries
@@ -96,7 +81,6 @@ jobs:
           name: windows
           path: src-tauri/target/release/bundle/
 
-  # Merge artifacts and create release
   create-release:
     needs: release
     permissions:
