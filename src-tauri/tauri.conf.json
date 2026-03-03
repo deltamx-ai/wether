@@ -1,0 +1,39 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "productName": "weather",
+  "version": "1.0.0",
+  "identifier": "com.weather.app",
+  "build": {
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:5173",
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Weather",
+        "width": 400,
+        "height": 700,
+        "resizable": true,
+        "fullscreen": false,
+        "minWidth": 320,
+        "minHeight": 500
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; connect-src 'self' https://geocoding-api.open-meteo.com https://api.open-meteo.com; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  }
+}
