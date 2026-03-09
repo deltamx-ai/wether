@@ -65,23 +65,13 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
-          run_install: false
-
-      - name: Get pnpm store path
-        shell: bash
-        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
-
-      - name: Cache pnpm store
+      - name: Cache npm
         uses: actions/cache@v4
         with:
-          path: ${{ env.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
-            ${{ runner.os }}-pnpm-
+            ${{ runner.os }}-npm-
 
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
@@ -102,7 +92,7 @@ jobs:
             patchelf
 
       - name: Install frontend dependencies
-        run: pnpm install
+        run: npm ci
 
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@v0
@@ -110,7 +100,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tagName: ${{ github.ref_name }}
-          releaseName: 'Tomo Plan ${{ github.ref_name }}'
+          releaseName: 'Weather ${{ github.ref_name }}'
           releaseBody: ${{ needs.changelog.outputs.body }}
           releaseDraft: false
           prerelease: false
